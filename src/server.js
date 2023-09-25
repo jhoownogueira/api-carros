@@ -21,6 +21,30 @@ const verifyJWT = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.KEY_JWT);
+    console.log(decoded);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Token inválido" });
+  }
+};
+
+const verifyAdmin = (req, res, next) => {
+  const token = req.headers["authorization"]?.split(" ")[1];
+
+  if (!token) {
+    return res
+      .status(401)
+      .json({ message: "Acesso negado, token não fornecido" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.KEY_JWT);
+    if (decoded.roles !== "ADMIN") {
+      return res
+        .status(403)
+        .json({ message: "Acesso negado, você não é um administrador" });
+    }
     req.user = decoded;
     next();
   } catch (error) {
@@ -39,7 +63,7 @@ app.get("/carros/:id", verifyJWT, async (req, res) => {
   res.status(200).json(carro);
 });
 
-app.post("/carros", verifyJWT, async (req, res) => {
+app.post("/carros", verifyAdmin, async (req, res) => {
   const { placa, marca, modelo, valor } = req.body;
   const newCarro = await prisma.carro.create({
     data: { placa, marca, modelo, valor },
@@ -47,7 +71,7 @@ app.post("/carros", verifyJWT, async (req, res) => {
   res.status(201).json(newCarro);
 });
 
-app.put("/carros/:id", verifyJWT, async (req, res) => {
+app.put("/carros/:id", verifyAdmin, async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
   const updatedCarro = await prisma.carro.update({
@@ -57,7 +81,7 @@ app.put("/carros/:id", verifyJWT, async (req, res) => {
   res.status(200).json(updatedCarro);
 });
 
-app.delete("/carros/:id", verifyJWT, async (req, res) => {
+app.delete("/carros/:id", verifyAdmin, async (req, res) => {
   const { id } = req.params;
   await prisma.carro.delete({ where: { id: id } });
   res.status(200).json({ message: "Carro deletado com sucesso!" });
@@ -95,7 +119,7 @@ app.post("/seguranca/login", async (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: user.id, login: user.login },
+    { id: user.id, login: user.login, roles: user.roles },
     process.env.KEY_JWT,
     { expiresIn: "1h" }
   );
