@@ -6,9 +6,11 @@ const prisma = new PrismaClient();
 const app = express();
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import cors from "cors";
 const port = 3333;
 
 app.use(express.json());
+app.use(cors());
 
 const verifyJWT = (req, res, next) => {
   const token = req.headers["authorization"]?.split(" ")[1];
