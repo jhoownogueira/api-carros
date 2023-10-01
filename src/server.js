@@ -101,7 +101,7 @@ app.delete("/carros/:id", verifyAdmin, async (req, res) => {
   res.status(200).json({ message: "Carro deletado com sucesso!" });
 });
 
-app.post("/seguranca/register", async (req, res) => {
+app.post("/seguranca/register", verifyAdmin, async (req, res) => {
   const { nome, email, login, senha } = req.body;
 
   const hashedPassword = await bcrypt.hash(senha, 10);
