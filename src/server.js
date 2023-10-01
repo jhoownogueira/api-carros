@@ -67,9 +67,21 @@ app.get("/carros/:id", verifyJWT, async (req, res) => {
 
 app.post("/carros", verifyAdmin, async (req, res) => {
   const { placa, marca, modelo, valor } = req.body;
+
+  const carroExistente = await prisma.carro.findUnique({
+    where: {
+      placa: placa,
+    },
+  });
+
+  if (carroExistente) {
+    return res.status(400).json({ error: "Placa já registrada." });
+  }
+
   const newCarro = await prisma.carro.create({
     data: { placa, marca, modelo, valor },
   });
+
   res.status(201).json(newCarro);
 });
 
